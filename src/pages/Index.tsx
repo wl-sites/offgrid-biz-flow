@@ -39,6 +39,10 @@ const Index = () => {
     setShowConfig(false);
   };
 
+  const handleRegister = async (email: string, password: string, currency: 'USD' | 'CDF' | 'EUR') => {
+    return await register(email, password, currency);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -51,7 +55,7 @@ const Index = () => {
   }
 
   if (!user) {
-    return <AuthScreen onLogin={login} onRegister={register} />;
+    return <AuthScreen onLogin={login} onRegister={handleRegister} />;
   }
 
   if (showConfig) {

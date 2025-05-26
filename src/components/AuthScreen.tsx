@@ -4,18 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { t } from '../utils/i18n';
 
 interface AuthScreenProps {
   onLogin: (email: string, password: string) => Promise<boolean>;
-  onRegister: (email: string, password: string) => Promise<boolean>;
+  onRegister: (email: string, password: string, currency: 'USD' | 'CDF' | 'EUR') => Promise<boolean>;
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [currency, setCurrency] = useState<'USD' | 'CDF' | 'EUR'>('USD');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -62,7 +64,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
     }
 
     setIsLoading(true);
-    const success = await onRegister(email, password);
+    const success = await onRegister(email, password, currency);
     setIsLoading(false);
 
     if (!success) {
@@ -143,6 +145,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Devise</label>
+                <Select value={currency} onValueChange={(value: 'USD' | 'CDF' | 'EUR') => setCurrency(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="CDF">CDF (FC)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button 
                 className="w-full bg-green-600 hover:bg-green-700" 
