@@ -26,8 +26,8 @@ export const useSupabaseAuth = () => {
             setUser({
               id: profile.id,
               email: profile.email,
-              language: profile.language,
-              currency: profile.currency
+              language: profile.language as 'fr' | 'en' | 'sw',
+              currency: profile.currency as 'USD' | 'CDF' | 'EUR'
             });
           }
         } else {
@@ -52,8 +52,8 @@ export const useSupabaseAuth = () => {
               setUser({
                 id: profile.id,
                 email: profile.email,
-                language: profile.language,
-                currency: profile.currency
+                language: profile.language as 'fr' | 'en' | 'sw',
+                currency: profile.currency as 'USD' | 'CDF' | 'EUR'
               });
             }
             setIsLoading(false);
@@ -73,7 +73,7 @@ export const useSupabaseAuth = () => {
       options: {
         data: {
           currency,
-          language: 'fr'
+          language: 'fr' as 'fr' | 'en' | 'sw'
         }
       }
     });

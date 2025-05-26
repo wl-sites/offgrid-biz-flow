@@ -16,8 +16,8 @@ export interface Product {
   current_stock: number;
   purchase_price: number;
   sale_price: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Sale {
@@ -29,7 +29,7 @@ export interface Sale {
   unit_price: number;
   total_amount: number;
   profit: number;
-  date: Date;
+  date: string;
 }
 
 export interface Expense {
@@ -38,7 +38,7 @@ export interface Expense {
   amount: number;
   description: string;
   category?: string;
-  date: Date;
+  date: string;
 }
 
 export interface DashboardStats {

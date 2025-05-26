@@ -14,7 +14,7 @@ interface SalesManagerProps {
   products: Product[];
   sales: Sale[];
   user: User;
-  onAddSale: (productId: string, quantity: number) => boolean;
+  onAddSale: (productId: string, quantity: number) => Promise<boolean>;
 }
 
 const SalesManager: React.FC<SalesManagerProps> = ({
@@ -28,7 +28,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedProductId) {
       toast({
         variant: "destructive",
@@ -38,7 +38,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({
       return;
     }
 
-    const success = onAddSale(selectedProductId, quantity);
+    const success = await onAddSale(selectedProductId, quantity);
     if (success) {
       setSelectedProductId('');
       setQuantity(1);
@@ -57,7 +57,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({
   };
 
   const selectedProduct = products.find(p => p.id === selectedProductId);
-  const totalAmount = selectedProduct ? selectedProduct.salePrice * quantity : 0;
+  const totalAmount = selectedProduct ? selectedProduct.sale_price * quantity : 0;
 
   return (
     <div className="space-y-6 p-4">
@@ -85,9 +85,9 @@ const SalesManager: React.FC<SalesManagerProps> = ({
                     <SelectValue placeholder="Choisir un produit" />
                   </SelectTrigger>
                   <SelectContent>
-                    {products.filter(p => p.currentStock > 0).map((product) => (
+                    {products.filter(p => p.current_stock > 0).map((product) => (
                       <SelectItem key={product.id} value={product.id}>
-                        {product.name} (Stock: {product.currentStock})
+                        {product.name} (Stock: {product.current_stock})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -96,8 +96,8 @@ const SalesManager: React.FC<SalesManagerProps> = ({
               
               {selectedProduct && (
                 <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm">Prix unitaire: {formatCurrency(selectedProduct.salePrice, user.currency)}</p>
-                  <p className="text-sm">Stock disponible: {selectedProduct.currentStock}</p>
+                  <p className="text-sm">Prix unitaire: {formatCurrency(selectedProduct.sale_price, user.currency)}</p>
+                  <p className="text-sm">Stock disponible: {selectedProduct.current_stock}</p>
                 </div>
               )}
               
@@ -106,7 +106,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({
                 <Input
                   type="number"
                   min="1"
-                  max={selectedProduct?.currentStock || 1}
+                  max={selectedProduct?.current_stock || 1}
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
                 />
@@ -116,7 +116,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <p className="font-medium">Total: {formatCurrency(totalAmount, user.currency)}</p>
                   <p className="text-sm text-gray-600">
-                    Bénéfice: {formatCurrency((selectedProduct.salePrice - selectedProduct.purchasePrice) * quantity, user.currency)}
+                    Bénéfice: {formatCurrency((selectedProduct.sale_price - selectedProduct.purchase_price) * quantity, user.currency)}
                   </p>
                 </div>
               )}
@@ -147,13 +147,13 @@ const SalesManager: React.FC<SalesManagerProps> = ({
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{sale.productName}</h3>
+                    <h3 className="font-medium">{sale.product_name}</h3>
                     <p className="text-sm text-gray-600">
                       {new Date(sale.date).toLocaleDateString()} - {sale.quantity} unité(s)
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(sale.totalAmount, user.currency)}</p>
+                    <p className="font-medium">{formatCurrency(sale.total_amount, user.currency)}</p>
                     <p className="text-sm text-green-600">
                       Bénéfice: {formatCurrency(sale.profit, user.currency)}
                     </p>

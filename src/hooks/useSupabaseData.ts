@@ -112,7 +112,8 @@ export const useSupabaseData = (userId: string | null) => {
       .from('expenses')
       .insert({
         ...expenseData,
-        user_id: userId
+        user_id: userId,
+        date: expenseData.date
       });
 
     if (!error) {
