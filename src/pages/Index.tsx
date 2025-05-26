@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
-import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
-import { useSupabaseData } from '../hooks/useSupabaseData';
-import AuthPage from '../components/AuthPage';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { useData } from '../hooks/useData';
+import AuthScreen from '../components/AuthScreen';
 import ConfigScreen from '../components/ConfigScreen';
 import Dashboard from '../components/Dashboard';
 import ProductManager from '../components/ProductManager';
@@ -11,7 +11,7 @@ import ExpenseManager from '../components/ExpenseManager';
 import BottomNavigation from '../components/BottomNavigation';
 
 const Index = () => {
-  const { user, isLoading, signOut, updateUserConfig } = useSupabaseAuth();
+  const { user, isLoading, login, register, logout, updateUserConfig } = useAuth();
   const {
     products,
     sales,
@@ -23,18 +23,24 @@ const Index = () => {
     addExpense,
     deleteExpense,
     getDashboardStats
-  } = useSupabaseData(user?.id || null);
+  } = useData();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showConfig, setShowConfig] = useState(false);
 
-  const handleConfigComplete = async (language: 'fr' | 'en' | 'sw', currency: 'USD' | 'CDF' | 'EUR') => {
-    await updateUserConfig(language, currency);
+  useEffect(() => {
+    if (user && !user.language) {
+      setShowConfig(true);
+    }
+  }, [user]);
+
+  const handleConfigComplete = (language: 'fr' | 'en' | 'sw', currency: 'USD' | 'CDF' | 'EUR') => {
+    updateUserConfig(language, currency);
     setShowConfig(false);
   };
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleRegister = async (email: string, password: string, currency: 'USD' | 'CDF' | 'EUR') => {
+    return await register(email, password, currency);
   };
 
   if (isLoading) {
@@ -49,7 +55,7 @@ const Index = () => {
   }
 
   if (!user) {
-    return <AuthPage />;
+    return <AuthScreen onLogin={login} onRegister={handleRegister} />;
   }
 
   if (showConfig) {
@@ -103,7 +109,7 @@ const Index = () => {
       <BottomNavigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onLogout={handleLogout}
+        onLogout={logout}
       />
     </div>
   );

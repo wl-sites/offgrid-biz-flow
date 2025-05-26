@@ -11,7 +11,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 interface ProductManagerProps {
   products: Product[];
   user: User;
-  onAddProduct: (product: Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  onAddProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'currentStock'>) => void;
   onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
   onDeleteProduct: (productId: string) => void;
 }
@@ -29,9 +29,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
     name: '',
     category: '',
     subcategory: '',
-    initial_stock: 0,
-    purchase_price: 0,
-    sale_price: 0
+    initialStock: 0,
+    purchasePrice: 0,
+    salePrice: 0
   });
 
   const resetForm = () => {
@@ -39,9 +39,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
       name: '',
       category: '',
       subcategory: '',
-      initial_stock: 0,
-      purchase_price: 0,
-      sale_price: 0
+      initialStock: 0,
+      purchasePrice: 0,
+      salePrice: 0
     });
     setEditingProduct(null);
   };
@@ -61,9 +61,9 @@ const ProductManager: React.FC<ProductManagerProps> = ({
       name: product.name,
       category: product.category,
       subcategory: product.subcategory || '',
-      initial_stock: product.initial_stock,
-      purchase_price: product.purchase_price,
-      sale_price: product.sale_price
+      initialStock: product.initialStock,
+      purchasePrice: product.purchasePrice,
+      salePrice: product.salePrice
     });
     setEditingProduct(product);
     setIsDialogOpen(true);
@@ -118,8 +118,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                 <label className="text-sm font-medium">{t('products.initialStock', user.language)}</label>
                 <Input
                   type="number"
-                  value={formData.initial_stock}
-                  onChange={(e) => setFormData({ ...formData, initial_stock: Number(e.target.value) })}
+                  value={formData.initialStock}
+                  onChange={(e) => setFormData({ ...formData, initialStock: Number(e.target.value) })}
                   placeholder="0"
                 />
               </div>
@@ -128,8 +128,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.purchase_price}
-                  onChange={(e) => setFormData({ ...formData, purchase_price: Number(e.target.value) })}
+                  value={formData.purchasePrice}
+                  onChange={(e) => setFormData({ ...formData, purchasePrice: Number(e.target.value) })}
                   placeholder="0.00"
                 />
               </div>
@@ -138,8 +138,8 @@ const ProductManager: React.FC<ProductManagerProps> = ({
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.sale_price}
-                  onChange={(e) => setFormData({ ...formData, sale_price: Number(e.target.value) })}
+                  value={formData.salePrice}
+                  onChange={(e) => setFormData({ ...formData, salePrice: Number(e.target.value) })}
                   placeholder="0.00"
                 />
               </div>
@@ -179,22 +179,22 @@ const ProductManager: React.FC<ProductManagerProps> = ({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Stock actuel:</span>
-                  <span className={`font-medium ${product.current_stock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
-                    {product.current_stock}
+                  <span className={`font-medium ${product.currentStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
+                    {product.currentStock}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Prix d'achat:</span>
-                  <span>{formatCurrency(product.purchase_price, user.currency)}</span>
+                  <span>{formatCurrency(product.purchasePrice, user.currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Prix de vente:</span>
-                  <span className="font-medium">{formatCurrency(product.sale_price, user.currency)}</span>
+                  <span className="font-medium">{formatCurrency(product.salePrice, user.currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Marge:</span>
                   <span className="font-medium text-green-600">
-                    {formatCurrency(product.sale_price - product.purchase_price, user.currency)}
+                    {formatCurrency(product.salePrice - product.purchasePrice, user.currency)}
                   </span>
                 </div>
               </div>

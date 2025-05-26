@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ExpenseManagerProps {
   expenses: Expense[];
   user: User;
-  onAddExpense: (expense: Omit<Expense, 'id' | 'user_id'>) => void;
+  onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onDeleteExpense: (expenseId: string) => void;
 }
 
@@ -53,7 +53,7 @@ const ExpenseManager: React.FC<ExpenseManagerProps> = ({
 
     onAddExpense({
       ...formData,
-      date: formData.date
+      date: new Date(formData.date)
     });
     
     resetForm();

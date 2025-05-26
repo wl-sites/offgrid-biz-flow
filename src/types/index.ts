@@ -8,37 +8,34 @@ export interface User {
 
 export interface Product {
   id: string;
-  user_id: string;
   name: string;
   category: string;
   subcategory?: string;
-  initial_stock: number;
-  current_stock: number;
-  purchase_price: number;
-  sale_price: number;
-  created_at: string;
-  updated_at: string;
+  initialStock: number;
+  currentStock: number;
+  purchasePrice: number;
+  salePrice: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Sale {
   id: string;
-  user_id: string;
-  product_id: string;
-  product_name: string;
+  productId: string;
+  productName: string;
   quantity: number;
-  unit_price: number;
-  total_amount: number;
+  unitPrice: number;
+  totalAmount: number;
   profit: number;
-  date: string;
+  date: Date;
 }
 
 export interface Expense {
   id: string;
-  user_id: string;
   amount: number;
   description: string;
   category?: string;
-  date: string;
+  date: Date;
 }
 
 export interface DashboardStats {

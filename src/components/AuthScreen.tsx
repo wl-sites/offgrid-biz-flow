@@ -6,16 +6,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
+import { t } from '../utils/i18n';
 
-const AuthPage: React.FC = () => {
+interface AuthScreenProps {
+  onLogin: (email: string, password: string) => Promise<boolean>;
+  onRegister: (email: string, password: string, currency: 'USD' | 'CDF' | 'EUR') => Promise<boolean>;
+}
+
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currency, setCurrency] = useState<'USD' | 'CDF' | 'EUR'>('USD');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { signIn, signUp } = useSupabaseAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -28,14 +32,14 @@ const AuthPage: React.FC = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signIn(email, password);
+    const success = await onLogin(email, password);
     setIsLoading(false);
 
-    if (error) {
+    if (!success) {
       toast({
         variant: "destructive",
         title: "Erreur de connexion",
-        description: error.message
+        description: "Email ou mot de passe incorrect"
       });
     }
   };
@@ -60,19 +64,14 @@ const AuthPage: React.FC = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signUp(email, password, currency);
+    const success = await onRegister(email, password, currency);
     setIsLoading(false);
 
-    if (error) {
+    if (!success) {
       toast({
         variant: "destructive",
         title: "Erreur d'inscription",
-        description: error.message
-      });
-    } else {
-      toast({
-        title: "Inscription réussie",
-        description: "Vérifiez votre email pour confirmer votre compte"
+        description: "Une erreur est survenue lors de l'inscription"
       });
     }
   };
@@ -87,13 +86,13 @@ const AuthPage: React.FC = () => {
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Connexion</TabsTrigger>
-              <TabsTrigger value="register">Inscription</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+              <TabsTrigger value="register">{t('auth.register')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium">{t('auth.email')}</label>
                 <Input
                   type="email"
                   value={email}
@@ -102,7 +101,7 @@ const AuthPage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Mot de passe</label>
+                <label className="text-sm font-medium">{t('auth.password')}</label>
                 <Input
                   type="password"
                   value={password}
@@ -115,13 +114,13 @@ const AuthPage: React.FC = () => {
                 onClick={handleLogin}
                 disabled={isLoading}
               >
-                {isLoading ? 'Connexion...' : 'Se connecter'}
+                {isLoading ? t('common.loading') : t('auth.login')}
               </Button>
             </TabsContent>
             
             <TabsContent value="register" className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium">{t('auth.email')}</label>
                 <Input
                   type="email"
                   value={email}
@@ -130,7 +129,7 @@ const AuthPage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Mot de passe</label>
+                <label className="text-sm font-medium">{t('auth.password')}</label>
                 <Input
                   type="password"
                   value={password}
@@ -139,7 +138,7 @@ const AuthPage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Confirmer le mot de passe</label>
+                <label className="text-sm font-medium">{t('auth.confirmPassword')}</label>
                 <Input
                   type="password"
                   value={confirmPassword}
@@ -165,7 +164,7 @@ const AuthPage: React.FC = () => {
                 onClick={handleRegister}
                 disabled={isLoading}
               >
-                {isLoading ? 'Inscription...' : 'S\'inscrire'}
+                {isLoading ? t('common.loading') : t('auth.register')}
               </Button>
             </TabsContent>
           </Tabs>
@@ -175,4 +174,4 @@ const AuthPage: React.FC = () => {
   );
 };
 
-export default AuthPage;
+export default AuthScreen;
