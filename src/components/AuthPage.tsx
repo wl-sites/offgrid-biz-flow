@@ -6,20 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { t } from '../utils/i18n';
+import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
 
-interface AuthScreenProps {
-  onLogin: (email: string, password: string) => Promise<boolean>;
-  onRegister: (email: string, password: string, currency: 'USD' | 'CDF' | 'EUR') => Promise<boolean>;
-}
-
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
+const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currency, setCurrency] = useState<'USD' | 'CDF' | 'EUR'>('USD');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { signIn, signUp } = useSupabaseAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -32,14 +28,14 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
     }
 
     setIsLoading(true);
-    const success = await onLogin(email, password);
+    const { error } = await signIn(email, password);
     setIsLoading(false);
 
-    if (!success) {
+    if (error) {
       toast({
         variant: "destructive",
         title: "Erreur de connexion",
-        description: "Email ou mot de passe incorrect"
+        description: error.message
       });
     }
   };
@@ -64,14 +60,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
     }
 
     setIsLoading(true);
-    const success = await onRegister(email, password, currency);
+    const { error } = await signUp(email, password, currency);
     setIsLoading(false);
 
-    if (!success) {
+    if (error) {
       toast({
         variant: "destructive",
         title: "Erreur d'inscription",
-        description: "Une erreur est survenue lors de l'inscription"
+        description: error.message
+      });
+    } else {
+      toast({
+        title: "Inscription réussie",
+        description: "Vérifiez votre email pour confirmer votre compte"
       });
     }
   };
@@ -86,13 +87,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-              <TabsTrigger value="register">{t('auth.register')}</TabsTrigger>
+              <TabsTrigger value="login">Connexion</TabsTrigger>
+              <TabsTrigger value="register">Inscription</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('auth.email')}</label>
+                <label className="text-sm font-medium">Email</label>
                 <Input
                   type="email"
                   value={email}
@@ -101,7 +102,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('auth.password')}</label>
+                <label className="text-sm font-medium">Mot de passe</label>
                 <Input
                   type="password"
                   value={password}
@@ -114,13 +115,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
                 onClick={handleLogin}
                 disabled={isLoading}
               >
-                {isLoading ? t('common.loading') : t('auth.login')}
+                {isLoading ? 'Connexion...' : 'Se connecter'}
               </Button>
             </TabsContent>
             
             <TabsContent value="register" className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('auth.email')}</label>
+                <label className="text-sm font-medium">Email</label>
                 <Input
                   type="email"
                   value={email}
@@ -129,7 +130,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('auth.password')}</label>
+                <label className="text-sm font-medium">Mot de passe</label>
                 <Input
                   type="password"
                   value={password}
@@ -138,7 +139,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('auth.confirmPassword')}</label>
+                <label className="text-sm font-medium">Confirmer le mot de passe</label>
                 <Input
                   type="password"
                   value={confirmPassword}
@@ -164,7 +165,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
                 onClick={handleRegister}
                 disabled={isLoading}
               >
-                {isLoading ? t('common.loading') : t('auth.register')}
+                {isLoading ? 'Inscription...' : 'S\'inscrire'}
               </Button>
             </TabsContent>
           </Tabs>
@@ -174,4 +175,4 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onRegister }) => {
   );
 };
 
-export default AuthScreen;
+export default AuthPage;
