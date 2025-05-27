@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +10,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 interface ProductManagerProps {
   products: Product[];
   user: User;
-  onAddProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'currentStock'>) => void;
+  onAddProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
   onDeleteProduct: (productId: string) => void;
 }
@@ -48,9 +47,24 @@ const ProductManager: React.FC<ProductManagerProps> = ({
 
   const handleSubmit = () => {
     if (editingProduct) {
-      onUpdateProduct(editingProduct.id, formData);
+      onUpdateProduct(editingProduct.id, {
+        name: formData.name,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        initialStock: formData.initialStock,
+        purchasePrice: formData.purchasePrice,
+        salePrice: formData.salePrice
+      });
     } else {
-      onAddProduct(formData);
+      onAddProduct({
+        name: formData.name,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        initialStock: formData.initialStock,
+        currentStock: formData.initialStock, // Set currentStock to initialStock for new products
+        purchasePrice: formData.purchasePrice,
+        salePrice: formData.salePrice
+      });
     }
     resetForm();
     setIsDialogOpen(false);
