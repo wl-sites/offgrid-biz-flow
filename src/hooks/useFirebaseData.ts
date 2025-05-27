@@ -182,7 +182,12 @@ export const useFirebaseData = (userId: string | undefined) => {
   const getDashboardStats = (): DashboardStats => {
     const totalRevenue = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const netProfit = totalRevenue - totalExpenses;
+    
+    // Calculate total profits from all products sold
+    const totalProductProfits = sales.reduce((sum, sale) => sum + sale.profit, 0);
+    
+    // Net profit = Total profits from products - Total expenses
+    const netProfit = totalProductProfits - totalExpenses;
 
     const productProfits = products.map(product => {
       const productSales = sales.filter(sale => sale.productId === product.id);

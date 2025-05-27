@@ -22,7 +22,7 @@ const translations: Translations = {
   
   // Dashboard
   'dashboard.title': { fr: 'Tableau de bord', en: 'Dashboard', sw: 'Dashibodi' },
-  'dashboard.totalRevenue': { fr: 'Chiffre d\'affaires total', en: 'Total Revenue', sw: 'Mapato ya jumla' },
+  'dashboard.totalSales': { fr: 'Ventes totales', en: 'Total Sales', sw: 'Mauzo ya jumla' },
   'dashboard.totalExpenses': { fr: 'Dépenses totales', en: 'Total Expenses', sw: 'Gharama za jumla' },
   'dashboard.netProfit': { fr: 'Bénéfice net', en: 'Net Profit', sw: 'Faida halisi' },
   
