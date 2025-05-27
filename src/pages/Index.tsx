@@ -8,6 +8,7 @@ import Dashboard from '../components/Dashboard';
 import ProductManager from '../components/ProductManager';
 import SalesManager from '../components/SalesManager';
 import ExpenseManager from '../components/ExpenseManager';
+import Settings from '../components/Settings';
 import BottomNavigation from '../components/BottomNavigation';
 import { User } from '../types';
 
@@ -54,6 +55,18 @@ const Index = () => {
       };
       setUserConfig(updatedConfig);
       setShowConfig(false);
+    }
+  };
+
+  const handleUpdateConfig = (language: 'fr' | 'en' | 'sw', currency: 'USD' | 'CDF' | 'EUR') => {
+    if (firebaseUser) {
+      const updatedConfig: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        language,
+        currency
+      };
+      setUserConfig(updatedConfig);
     }
   };
 
@@ -114,6 +127,14 @@ const Index = () => {
             onDeleteExpense={deleteExpense}
           />
         );
+      case 'settings':
+        return (
+          <Settings
+            user={userConfig}
+            onUpdateConfig={handleUpdateConfig}
+            onLogout={logout}
+          />
+        );
       default:
         return <Dashboard stats={stats} user={userConfig} />;
     }
@@ -127,7 +148,6 @@ const Index = () => {
       <BottomNavigation
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onLogout={logout}
       />
     </div>
   );

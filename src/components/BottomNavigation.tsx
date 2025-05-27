@@ -1,24 +1,23 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Home, Package, TrendingUp, DollarSign, LogOut } from 'lucide-react';
+import { Home, Package, TrendingUp, DollarSign, Settings } from 'lucide-react';
 
 interface BottomNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  onLogout: () => void;
 }
 
 const BottomNavigation: React.FC<BottomNavigationProps> = ({
   activeTab,
-  onTabChange,
-  onLogout
+  onTabChange
 }) => {
   const tabs = [
     { id: 'dashboard', icon: Home, label: 'Accueil' },
     { id: 'products', icon: Package, label: 'Produits' },
     { id: 'sales', icon: TrendingUp, label: 'Ventes' },
     { id: 'expenses', icon: DollarSign, label: 'Dépenses' },
+    { id: 'settings', icon: Settings, label: 'Paramètres' },
   ];
 
   return (
@@ -39,15 +38,6 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
             </Button>
           );
         })}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onLogout}
-          className="flex-1 flex flex-col items-center py-2 h-auto text-red-600"
-        >
-          <LogOut className="w-5 h-5 mb-1" />
-          <span className="text-xs">Sortir</span>
-        </Button>
       </div>
     </div>
   );

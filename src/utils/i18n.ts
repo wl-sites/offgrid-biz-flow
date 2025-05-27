@@ -57,6 +57,7 @@ const translations: Translations = {
   'common.edit': { fr: 'Modifier', en: 'Edit', sw: 'Hariri' },
   'common.back': { fr: 'Retour', en: 'Back', sw: 'Rudi' },
   'common.loading': { fr: 'Chargement...', en: 'Loading...', sw: 'Inapakia...' },
+  'common.settings': { fr: 'Paramètres', en: 'Settings', sw: 'Mipangilio' },
 };
 
 export const t = (key: string, language: 'fr' | 'en' | 'sw' = 'fr'): string => {
