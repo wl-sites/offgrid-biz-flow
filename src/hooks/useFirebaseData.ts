@@ -28,6 +28,8 @@ export const useFirebaseData = (userId: string | undefined) => {
       return;
     }
 
+    console.log('Setting up Firebase listeners for user:', userId);
+
     // Écouter les produits de l'utilisateur
     const productsQuery = query(
       collection(db, 'products'),
@@ -42,7 +44,10 @@ export const useFirebaseData = (userId: string | undefined) => {
         createdAt: doc.data().createdAt?.toDate() || new Date(),
         updatedAt: doc.data().updatedAt?.toDate() || new Date()
       })) as Product[];
+      console.log('Products updated from Firebase:', productsData.length);
       setProducts(productsData);
+    }, (error) => {
+      console.error('Erreur lors de l\'écoute des produits:', error);
     });
 
     // Écouter les ventes de l'utilisateur
@@ -58,7 +63,10 @@ export const useFirebaseData = (userId: string | undefined) => {
         ...doc.data(),
         date: doc.data().date?.toDate() || new Date()
       })) as Sale[];
+      console.log('Sales updated from Firebase:', salesData.length);
       setSales(salesData);
+    }, (error) => {
+      console.error('Erreur lors de l\'écoute des ventes:', error);
     });
 
     // Écouter les dépenses de l'utilisateur
@@ -74,10 +82,14 @@ export const useFirebaseData = (userId: string | undefined) => {
         ...doc.data(),
         date: doc.data().date?.toDate() || new Date()
       })) as Expense[];
+      console.log('Expenses updated from Firebase:', expensesData.length);
       setExpenses(expensesData);
+    }, (error) => {
+      console.error('Erreur lors de l\'écoute des dépenses:', error);
     });
 
     return () => {
+      console.log('Cleaning up Firebase listeners');
       unsubscribeProducts();
       unsubscribeSales();
       unsubscribeExpenses();
@@ -88,12 +100,14 @@ export const useFirebaseData = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('Adding product:', productData);
       await addDoc(collection(db, 'products'), {
         ...productData,
         userId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       });
+      console.log('Product added successfully');
     } catch (error) {
       console.error('Erreur lors de l\'ajout du produit:', error);
     }
@@ -103,10 +117,12 @@ export const useFirebaseData = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('Updating product:', productId, updates);
       await updateDoc(doc(db, 'products', productId), {
         ...updates,
         updatedAt: Timestamp.now()
       });
+      console.log('Product updated successfully');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du produit:', error);
     }
@@ -116,7 +132,9 @@ export const useFirebaseData = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('Deleting product:', productId);
       await deleteDoc(doc(db, 'products', productId));
+      console.log('Product deleted successfully');
     } catch (error) {
       console.error('Erreur lors de la suppression du produit:', error);
     }
@@ -126,10 +144,15 @@ export const useFirebaseData = (userId: string | undefined) => {
     if (!userId) return false;
 
     const product = products.find(p => p.id === productId);
-    if (!product || product.currentStock < quantity) return false;
+    if (!product || product.currentStock < quantity) {
+      console.log('Stock insuffisant pour le produit:', productId);
+      return false;
+    }
 
     try {
       const profit = (product.salePrice - product.purchasePrice) * quantity;
+      
+      console.log('Adding sale and updating stock for product:', productId);
       
       // Ajouter la vente
       await addDoc(collection(db, 'sales'), {
@@ -143,11 +166,12 @@ export const useFirebaseData = (userId: string | undefined) => {
         date: Timestamp.now()
       });
 
-      // Mettre à jour le stock
+      // Mettre à jour le stock - ceci déclenchera automatiquement la mise à jour en temps réel
       await updateProduct(productId, {
         currentStock: product.currentStock - quantity
       });
 
+      console.log('Sale added and stock updated successfully');
       return true;
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la vente:', error);
@@ -159,11 +183,13 @@ export const useFirebaseData = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('Adding expense:', expenseData);
       await addDoc(collection(db, 'expenses'), {
         ...expenseData,
         userId,
         date: Timestamp.now()
       });
+      console.log('Expense added successfully');
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la dépense:', error);
     }
@@ -173,7 +199,9 @@ export const useFirebaseData = (userId: string | undefined) => {
     if (!userId) return;
 
     try {
+      console.log('Deleting expense:', expenseId);
       await deleteDoc(doc(db, 'expenses', expenseId));
+      console.log('Expense deleted successfully');
     } catch (error) {
       console.error('Erreur lors de la suppression de la dépense:', error);
     }
