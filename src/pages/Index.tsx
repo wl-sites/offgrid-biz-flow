@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useData } from '../hooks/useData';
+import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+import { useFirebaseData } from '../hooks/useFirebaseData';
 import AuthScreen from '../components/AuthScreen';
 import ConfigScreen from '../components/ConfigScreen';
 import Dashboard from '../components/Dashboard';
@@ -9,9 +9,10 @@ import ProductManager from '../components/ProductManager';
 import SalesManager from '../components/SalesManager';
 import ExpenseManager from '../components/ExpenseManager';
 import BottomNavigation from '../components/BottomNavigation';
+import { User } from '../types';
 
 const Index = () => {
-  const { user, isLoading, login, register, logout, updateUserConfig } = useAuth();
+  const { user: firebaseUser, isLoading, login, logout } = useFirebaseAuth();
   const {
     products,
     sales,
@@ -23,20 +24,37 @@ const Index = () => {
     addExpense,
     deleteExpense,
     getDashboardStats
-  } = useData();
+  } = useFirebaseData(firebaseUser?.uid);
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showConfig, setShowConfig] = useState(false);
+  const [userConfig, setUserConfig] = useState<User | null>(null);
 
   useEffect(() => {
-    if (user && !user.language) {
+    if (firebaseUser && !userConfig) {
+      // Configuration par défaut pour les nouveaux utilisateurs
+      const defaultConfig: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        language: 'fr',
+        currency: 'USD'
+      };
+      setUserConfig(defaultConfig);
       setShowConfig(true);
     }
-  }, [user]);
+  }, [firebaseUser, userConfig]);
 
   const handleConfigComplete = (language: 'fr' | 'en' | 'sw', currency: 'USD' | 'CDF' | 'EUR') => {
-    updateUserConfig(language, currency);
-    setShowConfig(false);
+    if (firebaseUser) {
+      const updatedConfig: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        language,
+        currency
+      };
+      setUserConfig(updatedConfig);
+      setShowConfig(false);
+    }
   };
 
   if (isLoading) {
@@ -50,11 +68,11 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return <AuthScreen onLogin={login} onRegister={register} />;
+  if (!firebaseUser) {
+    return <AuthScreen onLogin={login} />;
   }
 
-  if (showConfig) {
+  if (showConfig || !userConfig) {
     return <ConfigScreen onConfigComplete={handleConfigComplete} />;
   }
 
@@ -63,12 +81,12 @@ const Index = () => {
     
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard stats={stats} user={user} />;
+        return <Dashboard stats={stats} user={userConfig} />;
       case 'products':
         return (
           <ProductManager
             products={products}
-            user={user}
+            user={userConfig}
             onAddProduct={addProduct}
             onUpdateProduct={updateProduct}
             onDeleteProduct={deleteProduct}
@@ -79,7 +97,7 @@ const Index = () => {
           <SalesManager
             products={products}
             sales={sales}
-            user={user}
+            user={userConfig}
             onAddSale={addSale}
           />
         );
@@ -87,13 +105,13 @@ const Index = () => {
         return (
           <ExpenseManager
             expenses={expenses}
-            user={user}
+            user={userConfig}
             onAddExpense={addExpense}
             onDeleteExpense={deleteExpense}
           />
         );
       default:
-        return <Dashboard stats={stats} user={user} />;
+        return <Dashboard stats={stats} user={userConfig} />;
     }
   };
 

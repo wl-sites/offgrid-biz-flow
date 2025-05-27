@@ -15,6 +15,7 @@ export interface Product {
   currentStock: number;
   purchasePrice: number;
   salePrice: number;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ export interface Sale {
   unitPrice: number;
   totalAmount: number;
   profit: number;
+  userId: string;
   date: Date;
 }
 
@@ -35,6 +37,7 @@ export interface Expense {
   amount: number;
   description: string;
   category?: string;
+  userId: string;
   date: Date;
 }
 
