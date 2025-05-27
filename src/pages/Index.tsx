@@ -57,6 +57,10 @@ const Index = () => {
     }
   };
 
+  const handleAddSale = async (productId: string, quantity: number): Promise<boolean> => {
+    return await addSale(productId, quantity);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -98,7 +102,7 @@ const Index = () => {
             products={products}
             sales={sales}
             user={userConfig}
-            onAddSale={addSale}
+            onAddSale={handleAddSale}
           />
         );
       case 'expenses':

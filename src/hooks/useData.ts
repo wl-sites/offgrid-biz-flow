@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Product, Sale, Expense, DashboardStats } from '../types';
 import { storage } from '../utils/storage';
 
-export const useData = () => {
+export const useData = (userId?: string) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -18,11 +18,10 @@ export const useData = () => {
     setExpenses(storage.getExpenses());
   };
 
-  const addProduct = (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'currentStock'>) => {
+  const addProduct = (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     const product: Product = {
       ...productData,
       id: Date.now().toString(),
-      currentStock: productData.initialStock,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -40,7 +39,9 @@ export const useData = () => {
     loadData();
   };
 
-  const addSale = (productId: string, quantity: number) => {
+  const addSale = async (productId: string, quantity: number): Promise<boolean> => {
+    if (!userId) return false;
+    
     const product = products.find(p => p.id === productId);
     if (product && product.currentStock >= quantity) {
       const profit = (product.salePrice - product.purchasePrice) * quantity;
@@ -52,10 +53,16 @@ export const useData = () => {
         unitPrice: product.salePrice,
         totalAmount: product.salePrice * quantity,
         profit,
+        userId: userId,
         date: new Date()
       };
       storage.addSale(sale);
-      loadData();
+      
+      // Update product stock
+      updateProduct(productId, { 
+        currentStock: product.currentStock - quantity 
+      });
+      
       return true;
     }
     return false;

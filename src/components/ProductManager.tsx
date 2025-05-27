@@ -61,9 +61,10 @@ const ProductManager: React.FC<ProductManagerProps> = ({
         category: formData.category,
         subcategory: formData.subcategory,
         initialStock: formData.initialStock,
-        currentStock: formData.initialStock, // Set currentStock to initialStock for new products
+        currentStock: formData.initialStock,
         purchasePrice: formData.purchasePrice,
-        salePrice: formData.salePrice
+        salePrice: formData.salePrice,
+        userId: user.id
       });
     }
     resetForm();
