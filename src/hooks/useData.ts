@@ -78,10 +78,7 @@ export const useData = () => {
   const getDashboardStats = (): DashboardStats => {
     const totalRevenue = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    
-    // Calcul du bénéfice net = total des profits des ventes - total des dépenses
-    const totalSalesProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
-    const netProfit = totalSalesProfit - totalExpenses;
+    const netProfit = totalRevenue - totalExpenses;
 
     const productProfits = products.map(product => {
       const productSales = sales.filter(sale => sale.productId === product.id);

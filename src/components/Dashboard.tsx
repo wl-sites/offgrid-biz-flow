@@ -18,7 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, user }) => {
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
             <CardDescription className="text-green-700">
-              Ventes totales
+              {t('dashboard.totalRevenue', user.language)}
             </CardDescription>
             <CardTitle className="text-2xl text-green-800">
               {formatCurrency(stats.totalRevenue, user.currency)}

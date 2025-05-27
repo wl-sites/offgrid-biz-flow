@@ -29,14 +29,14 @@ export const useAuth = () => {
     return false;
   };
 
-  const register = async (email: string, password: string, currency: 'USD' | 'CDF' | 'EUR'): Promise<boolean> => {
+  const register = async (email: string, password: string): Promise<boolean> => {
     // Simulate registration - in real app, this would use Supabase
     if (email && password) {
       const newUser: User = {
         id: Date.now().toString(),
         email,
         language: 'fr',
-        currency
+        currency: 'USD'
       };
       storage.setUser(newUser);
       setUser(newUser);
