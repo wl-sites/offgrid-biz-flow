@@ -37,12 +37,22 @@ const SalesManager: React.FC<SalesManagerProps> = ({
       return;
     }
 
+    const selectedProduct = products.find(p => p.id === selectedProductId);
+    if (!selectedProduct || selectedProduct.currentStock < quantity) {
+      toast({
+        title: "Erreur",
+        description: "Stock insuffisant pour cette vente",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const success = await onAddSale(selectedProductId, quantity);
     
     if (success) {
       toast({
         title: "Succès",
-        description: "Vente ajoutée avec succès"
+        description: `Vente ajoutée - Stock mis à jour automatiquement`
       });
       setSelectedProductId('');
       setQuantity(1);
@@ -54,6 +64,9 @@ const SalesManager: React.FC<SalesManagerProps> = ({
       });
     }
   };
+
+  // Filtre les produits avec stock disponible et actualise en temps réel
+  const availableProducts = products.filter(p => p.currentStock > 0);
 
   return (
     <div className="space-y-6 p-4">
@@ -74,13 +87,16 @@ const SalesManager: React.FC<SalesManagerProps> = ({
                   <SelectValue placeholder={t('sales.selectProduct', user.language)} />
                 </SelectTrigger>
                 <SelectContent>
-                  {products.filter(p => p.currentStock > 0).map((product) => (
+                  {availableProducts.map((product) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.name} (Stock: {product.currentStock})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {availableProducts.length === 0 && (
+                <p className="text-sm text-red-600 mt-1">Aucun produit en stock disponible</p>
+              )}
             </div>
             
             <div>
@@ -90,13 +106,14 @@ const SalesManager: React.FC<SalesManagerProps> = ({
               <Input
                 type="number"
                 min="1"
+                max={selectedProductId ? products.find(p => p.id === selectedProductId)?.currentStock || 1 : 1}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                 required
               />
             </div>
             
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!selectedProductId || availableProducts.length === 0}>
               {t('sales.addSale', user.language)}
             </Button>
           </form>

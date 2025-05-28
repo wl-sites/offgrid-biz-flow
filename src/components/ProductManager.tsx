@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -194,8 +195,17 @@ const ProductManager: React.FC<ProductManagerProps> = ({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Stock actuel:</span>
-                  <span className={`font-medium ${product.currentStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
+                  <span className={`font-medium ${
+                    product.currentStock <= 5 
+                      ? 'text-red-600' 
+                      : product.currentStock <= 10 
+                        ? 'text-orange-600' 
+                        : 'text-green-600'
+                  }`}>
                     {product.currentStock}
+                    {product.currentStock <= 5 && (
+                      <span className="ml-1 text-xs">(Stock faible!)</span>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -217,6 +227,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({
           </Card>
         ))}
       </div>
+
+      {products.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Aucun produit ajouté pour le moment</p>
+        </div>
+      )}
     </div>
   );
 };
