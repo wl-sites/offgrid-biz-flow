@@ -10,7 +10,9 @@ import {
   where, 
   onSnapshot,
   orderBy,
-  Timestamp 
+  Timestamp,
+  enableNetwork,
+  disableNetwork
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { Product, Sale, Expense, DashboardStats } from '../types';
@@ -19,9 +21,11 @@ export const useFirebaseData = (userId: string | undefined) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
     if (!userId) {
+      console.log('No userId provided, clearing all data');
       setProducts([]);
       setSales([]);
       setExpenses([]);
@@ -29,6 +33,15 @@ export const useFirebaseData = (userId: string | undefined) => {
     }
 
     console.log('Setting up Firebase listeners for user:', userId);
+
+    // Ensure network is enabled
+    enableNetwork(db).then(() => {
+      console.log('Firebase network enabled');
+      setIsConnected(true);
+    }).catch((error) => {
+      console.error('Error enabling Firebase network:', error);
+      setIsConnected(false);
+    });
 
     // Écouter les produits de l'utilisateur
     const productsQuery = query(
@@ -38,16 +51,20 @@ export const useFirebaseData = (userId: string | undefined) => {
     );
 
     const unsubscribeProducts = onSnapshot(productsQuery, (snapshot) => {
-      const productsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date()
-      })) as Product[];
-      console.log('Products updated from Firebase:', productsData.length);
+      const productsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        };
+      }) as Product[];
+      console.log('Products updated from Firebase:', productsData.length, 'products loaded');
       setProducts(productsData);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des produits:', error);
+      setIsConnected(false);
     });
 
     // Écouter les ventes de l'utilisateur
@@ -58,15 +75,19 @@ export const useFirebaseData = (userId: string | undefined) => {
     );
 
     const unsubscribeSales = onSnapshot(salesQuery, (snapshot) => {
-      const salesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date?.toDate() || new Date()
-      })) as Sale[];
-      console.log('Sales updated from Firebase:', salesData.length);
+      const salesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.date?.toDate() || new Date()
+        };
+      }) as Sale[];
+      console.log('Sales updated from Firebase:', salesData.length, 'sales loaded');
       setSales(salesData);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des ventes:', error);
+      setIsConnected(false);
     });
 
     // Écouter les dépenses de l'utilisateur
@@ -77,15 +98,19 @@ export const useFirebaseData = (userId: string | undefined) => {
     );
 
     const unsubscribeExpenses = onSnapshot(expensesQuery, (snapshot) => {
-      const expensesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date?.toDate() || new Date()
-      })) as Expense[];
-      console.log('Expenses updated from Firebase:', expensesData.length);
+      const expensesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.date?.toDate() || new Date()
+        };
+      }) as Expense[];
+      console.log('Expenses updated from Firebase:', expensesData.length, 'expenses loaded');
       setExpenses(expensesData);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des dépenses:', error);
+      setIsConnected(false);
     });
 
     return () => {
@@ -97,27 +122,34 @@ export const useFirebaseData = (userId: string | undefined) => {
   }, [userId]);
 
   const addProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('Cannot add product: no userId');
+      return;
+    }
 
     try {
-      console.log('Adding product:', productData);
-      await addDoc(collection(db, 'products'), {
+      console.log('Adding product to Firebase:', productData);
+      const docRef = await addDoc(collection(db, 'products'), {
         ...productData,
         userId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       });
-      console.log('Product added successfully');
+      console.log('Product added successfully with ID:', docRef.id);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du produit:', error);
+      throw error;
     }
   };
 
   const updateProduct = async (productId: string, updates: Partial<Product>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('Cannot update product: no userId');
+      return;
+    }
 
     try {
-      console.log('Updating product:', productId, updates);
+      console.log('Updating product in Firebase:', productId, updates);
       await updateDoc(doc(db, 'products', productId), {
         ...updates,
         updatedAt: Timestamp.now()
@@ -125,34 +157,42 @@ export const useFirebaseData = (userId: string | undefined) => {
       console.log('Product updated successfully');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du produit:', error);
+      throw error;
     }
   };
 
   const deleteProduct = async (productId: string) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('Cannot delete product: no userId');
+      return;
+    }
 
     try {
-      console.log('Deleting product:', productId);
+      console.log('Deleting product from Firebase:', productId);
       await deleteDoc(doc(db, 'products', productId));
       console.log('Product deleted successfully');
     } catch (error) {
       console.error('Erreur lors de la suppression du produit:', error);
+      throw error;
     }
   };
 
   const addSale = async (productId: string, quantity: number) => {
-    if (!userId) return false;
+    if (!userId) {
+      console.error('Cannot add sale: no userId');
+      return false;
+    }
 
     const product = products.find(p => p.id === productId);
     if (!product || product.currentStock < quantity) {
-      console.log('Stock insuffisant pour le produit:', productId);
+      console.log('Stock insuffisant pour le produit:', productId, 'Stock:', product?.currentStock, 'Demandé:', quantity);
       return false;
     }
 
     try {
       const profit = (product.salePrice - product.purchasePrice) * quantity;
       
-      console.log('Adding sale and updating stock for product:', productId);
+      console.log('Adding sale to Firebase and updating stock for product:', productId);
       
       // Ajouter la vente
       await addDoc(collection(db, 'sales'), {
@@ -180,30 +220,38 @@ export const useFirebaseData = (userId: string | undefined) => {
   };
 
   const addExpense = async (expenseData: Omit<Expense, 'id'>) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('Cannot add expense: no userId');
+      return;
+    }
 
     try {
-      console.log('Adding expense:', expenseData);
-      await addDoc(collection(db, 'expenses'), {
+      console.log('Adding expense to Firebase:', expenseData);
+      const docRef = await addDoc(collection(db, 'expenses'), {
         ...expenseData,
         userId,
         date: Timestamp.now()
       });
-      console.log('Expense added successfully');
+      console.log('Expense added successfully with ID:', docRef.id);
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la dépense:', error);
+      throw error;
     }
   };
 
   const deleteExpense = async (expenseId: string) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('Cannot delete expense: no userId');
+      return;
+    }
 
     try {
-      console.log('Deleting expense:', expenseId);
+      console.log('Deleting expense from Firebase:', expenseId);
       await deleteDoc(doc(db, 'expenses', expenseId));
       console.log('Expense deleted successfully');
     } catch (error) {
       console.error('Erreur lors de la suppression de la dépense:', error);
+      throw error;
     }
   };
 
@@ -242,6 +290,7 @@ export const useFirebaseData = (userId: string | undefined) => {
     products,
     sales,
     expenses,
+    isConnected,
     addProduct,
     updateProduct,
     deleteProduct,
