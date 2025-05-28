@@ -25,16 +25,20 @@ const SalesManager: React.FC<SalesManagerProps> = ({
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
 
-  // Reset product selection when products change (e.g., after stock update)
+  // Reset product selection when products change or when stock becomes 0
   useEffect(() => {
     if (selectedProductId) {
       const selectedProduct = products.find(p => p.id === selectedProductId);
       if (!selectedProduct || selectedProduct.currentStock === 0) {
+        console.log('Resetting product selection - stock is 0 or product not found');
         setSelectedProductId('');
         setQuantity(1);
+      } else if (quantity > selectedProduct.currentStock) {
+        // Ajuster la quantité si elle dépasse le stock disponible
+        setQuantity(selectedProduct.currentStock);
       }
     }
-  }, [products, selectedProductId]);
+  }, [products, selectedProductId, quantity]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +74,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({
     if (success) {
       toast({
         title: "Succès",
-        description: `Vente ajoutée - Stock mis à jour automatiquement`
+        description: `Vente de ${quantity} ${selectedProduct.name} enregistrée - Stock mis à jour`
       });
       setSelectedProductId('');
       setQuantity(1);
@@ -83,11 +87,11 @@ const SalesManager: React.FC<SalesManagerProps> = ({
     }
   };
 
-  // Filtre les produits avec stock disponible et actualise en temps réel
+  // Filtre les produits avec stock disponible
   const availableProducts = products.filter(p => p.currentStock > 0);
 
   console.log('SalesManager render - Available products:', availableProducts.length);
-  console.log('Products with stock:', availableProducts.map(p => ({ name: p.name, stock: p.currentStock })));
+  console.log('Products with stock:', availableProducts.map(p => ({ id: p.id, name: p.name, stock: p.currentStock })));
 
   return (
     <div className="space-y-6 p-4">

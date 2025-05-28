@@ -60,7 +60,7 @@ export const useFirebaseData = (userId: string | undefined) => {
         };
       }) as Product[];
       console.log('Products updated from Firebase:', productsData.length, 'products loaded');
-      console.log('Products data:', productsData);
+      console.log('Products stock data:', productsData.map(p => ({ id: p.id, name: p.name, stock: p.currentStock })));
       setProducts(productsData);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des produits:', error);
@@ -150,14 +150,27 @@ export const useFirebaseData = (userId: string | undefined) => {
 
     try {
       console.log('Updating product in Firebase:', productId, updates);
+      
+      // Mise à jour locale immédiate pour la réactivité
+      setProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId 
+            ? { ...product, ...updates, updatedAt: new Date() }
+            : product
+        )
+      );
+
+      // Mise à jour Firebase
       const productRef = doc(db, 'products', productId);
       await updateDoc(productRef, {
         ...updates,
         updatedAt: Timestamp.now()
       });
-      console.log('Product updated successfully - listeners will update UI automatically');
+      
+      console.log('Product updated successfully in Firebase');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du produit:', error);
+      // En cas d'erreur, recharger les données depuis Firebase
       throw error;
     }
   };
@@ -202,8 +215,17 @@ export const useFirebaseData = (userId: string | undefined) => {
         newStock
       });
       
-      // Ajouter la vente
-      await addDoc(collection(db, 'sales'), {
+      // Mise à jour locale immédiate du stock pour la réactivité
+      setProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === productId 
+            ? { ...p, currentStock: newStock, updatedAt: new Date() }
+            : p
+        )
+      );
+
+      // Ajouter la vente à Firebase
+      const saleDocRef = await addDoc(collection(db, 'sales'), {
         productId,
         productName: product.name,
         quantity,
@@ -214,15 +236,25 @@ export const useFirebaseData = (userId: string | undefined) => {
         date: Timestamp.now()
       });
 
-      // Mettre à jour le stock immédiatement
-      await updateProduct(productId, {
-        currentStock: newStock
+      // Mettre à jour le stock dans Firebase
+      const productRef = doc(db, 'products', productId);
+      await updateDoc(productRef, {
+        currentStock: newStock,
+        updatedAt: Timestamp.now()
       });
 
-      console.log('Sale added and stock updated successfully from', product.currentStock, 'to', newStock);
+      console.log('Sale added with ID:', saleDocRef.id, 'and stock updated from', product.currentStock, 'to', newStock);
       return true;
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la vente:', error);
+      // En cas d'erreur, restaurer l'état local
+      setProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === productId 
+            ? { ...p, currentStock: product.currentStock }
+            : p
+        )
+      );
       return false;
     }
   };
