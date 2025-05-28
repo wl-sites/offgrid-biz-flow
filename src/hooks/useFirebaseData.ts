@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   collection, 
@@ -61,6 +60,7 @@ export const useFirebaseData = (userId: string | undefined) => {
         };
       }) as Product[];
       console.log('Products updated from Firebase:', productsData.length, 'products loaded');
+      console.log('Products data:', productsData);
       setProducts(productsData);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des produits:', error);
@@ -150,11 +150,12 @@ export const useFirebaseData = (userId: string | undefined) => {
 
     try {
       console.log('Updating product in Firebase:', productId, updates);
-      await updateDoc(doc(db, 'products', productId), {
+      const productRef = doc(db, 'products', productId);
+      await updateDoc(productRef, {
         ...updates,
         updatedAt: Timestamp.now()
       });
-      console.log('Product updated successfully - stock will update automatically via listener');
+      console.log('Product updated successfully - listeners will update UI automatically');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du produit:', error);
       throw error;
@@ -191,10 +192,17 @@ export const useFirebaseData = (userId: string | undefined) => {
 
     try {
       const profit = (product.salePrice - product.purchasePrice) * quantity;
+      const newStock = product.currentStock - quantity;
       
-      console.log('Adding sale to Firebase and updating stock for product:', productId);
+      console.log('Processing sale:', {
+        productId,
+        productName: product.name,
+        quantity,
+        currentStock: product.currentStock,
+        newStock
+      });
       
-      // Ajouter la vente d'abord
+      // Ajouter la vente
       await addDoc(collection(db, 'sales'), {
         productId,
         productName: product.name,
@@ -206,14 +214,12 @@ export const useFirebaseData = (userId: string | undefined) => {
         date: Timestamp.now()
       });
 
-      // Mettre à jour le stock - Cette opération déclenchera automatiquement 
-      // les listeners en temps réel pour mettre à jour l'interface
-      const newStock = product.currentStock - quantity;
+      // Mettre à jour le stock immédiatement
       await updateProduct(productId, {
         currentStock: newStock
       });
 
-      console.log('Sale added and stock updated successfully - UI will update automatically');
+      console.log('Sale added and stock updated successfully from', product.currentStock, 'to', newStock);
       return true;
     } catch (error) {
       console.error('Erreur lors de l\'ajout de la vente:', error);

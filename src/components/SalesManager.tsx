@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,17 @@ const SalesManager: React.FC<SalesManagerProps> = ({
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
 
+  // Reset product selection when products change (e.g., after stock update)
+  useEffect(() => {
+    if (selectedProductId) {
+      const selectedProduct = products.find(p => p.id === selectedProductId);
+      if (!selectedProduct || selectedProduct.currentStock === 0) {
+        setSelectedProductId('');
+        setQuantity(1);
+      }
+    }
+  }, [products, selectedProductId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -47,6 +58,13 @@ const SalesManager: React.FC<SalesManagerProps> = ({
       return;
     }
 
+    console.log('Attempting sale:', {
+      productId: selectedProductId,
+      productName: selectedProduct.name,
+      quantity,
+      currentStock: selectedProduct.currentStock
+    });
+
     const success = await onAddSale(selectedProductId, quantity);
     
     if (success) {
@@ -67,6 +85,9 @@ const SalesManager: React.FC<SalesManagerProps> = ({
 
   // Filtre les produits avec stock disponible et actualise en temps réel
   const availableProducts = products.filter(p => p.currentStock > 0);
+
+  console.log('SalesManager render - Available products:', availableProducts.length);
+  console.log('Products with stock:', availableProducts.map(p => ({ name: p.name, stock: p.currentStock })));
 
   return (
     <div className="space-y-6 p-4">
