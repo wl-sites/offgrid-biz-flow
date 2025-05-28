@@ -11,7 +11,6 @@ import ExpenseManager from '../components/ExpenseManager';
 import Settings from '../components/Settings';
 import BottomNavigation from '../components/BottomNavigation';
 import { User } from '../types';
-import { Wifi, WifiOff } from 'lucide-react';
 
 const Index = () => {
   const { user: firebaseUser, isLoading, login, logout } = useFirebaseAuth();
@@ -19,7 +18,6 @@ const Index = () => {
     products,
     sales,
     expenses,
-    isConnected,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -72,6 +70,10 @@ const Index = () => {
     }
   };
 
+  const handleAddSale = async (productId: string, quantity: number): Promise<boolean> => {
+    return await addSale(productId, quantity);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,7 +115,7 @@ const Index = () => {
             products={products}
             sales={sales}
             user={userConfig}
-            onAddSale={addSale}
+            onAddSale={handleAddSale}
           />
         );
       case 'expenses':
@@ -140,26 +142,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Indicateur de connexion */}
-      <div className={`fixed top-0 left-0 right-0 z-50 p-2 text-center text-sm ${
-        isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-      }`}>
-        <div className="flex items-center justify-center gap-2">
-          {isConnected ? (
-            <>
-              <Wifi className="w-4 h-4" />
-              <span>Connecté - Données synchronisées</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-4 h-4" />
-              <span>Hors ligne - Vérifiez votre connexion</span>
-            </>
-          )}
-        </div>
-      </div>
-      
-      <div className="pb-20 pt-12">
+      <div className="pb-20">
         {renderActiveTab()}
       </div>
       <BottomNavigation
