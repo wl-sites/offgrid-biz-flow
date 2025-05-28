@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,21 @@ const SalesManager: React.FC<SalesManagerProps> = ({
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
 
+  // Reset product selection when products change or when stock becomes 0
+  useEffect(() => {
+    if (selectedProductId) {
+      const selectedProduct = products.find(p => p.id === selectedProductId);
+      if (!selectedProduct || selectedProduct.currentStock === 0) {
+        console.log('Resetting product selection - stock is 0 or product not found');
+        setSelectedProductId('');
+        setQuantity(1);
+      } else if (quantity > selectedProduct.currentStock) {
+        // Ajuster la quantité si elle dépasse le stock disponible
+        setQuantity(selectedProduct.currentStock);
+      }
+    }
+  }, [products, selectedProductId, quantity]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -37,12 +52,29 @@ const SalesManager: React.FC<SalesManagerProps> = ({
       return;
     }
 
+    const selectedProduct = products.find(p => p.id === selectedProductId);
+    if (!selectedProduct || selectedProduct.currentStock < quantity) {
+      toast({
+        title: "Erreur",
+        description: "Stock insuffisant pour cette vente",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('Attempting sale:', {
+      productId: selectedProductId,
+      productName: selectedProduct.name,
+      quantity,
+      currentStock: selectedProduct.currentStock
+    });
+
     const success = await onAddSale(selectedProductId, quantity);
     
     if (success) {
       toast({
         title: "Succès",
-        description: "Vente ajoutée avec succès"
+        description: `Vente de ${quantity} ${selectedProduct.name} enregistrée - Stock mis à jour`
       });
       setSelectedProductId('');
       setQuantity(1);
@@ -54,6 +86,12 @@ const SalesManager: React.FC<SalesManagerProps> = ({
       });
     }
   };
+
+  // Filtre les produits avec stock disponible
+  const availableProducts = products.filter(p => p.currentStock > 0);
+
+  console.log('SalesManager render - Available products:', availableProducts.length);
+  console.log('Products with stock:', availableProducts.map(p => ({ id: p.id, name: p.name, stock: p.currentStock })));
 
   return (
     <div className="space-y-6 p-4">
@@ -74,13 +112,16 @@ const SalesManager: React.FC<SalesManagerProps> = ({
                   <SelectValue placeholder={t('sales.selectProduct', user.language)} />
                 </SelectTrigger>
                 <SelectContent>
-                  {products.filter(p => p.currentStock > 0).map((product) => (
+                  {availableProducts.map((product) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.name} (Stock: {product.currentStock})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {availableProducts.length === 0 && (
+                <p className="text-sm text-red-600 mt-1">Aucun produit en stock disponible</p>
+              )}
             </div>
             
             <div>
@@ -90,13 +131,14 @@ const SalesManager: React.FC<SalesManagerProps> = ({
               <Input
                 type="number"
                 min="1"
+                max={selectedProductId ? products.find(p => p.id === selectedProductId)?.currentStock || 1 : 1}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                 required
               />
             </div>
             
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!selectedProductId || availableProducts.length === 0}>
               {t('sales.addSale', user.language)}
             </Button>
           </form>
